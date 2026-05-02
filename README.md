@@ -5,15 +5,19 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Android-green?style=for-the-badge&logo=android"/>
-  <img src="https://img.shields.io/badge/Language-Kotlin-purple?style=for-the-badge&logo=kotlin"/>
-  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-blue?style=for-the-badge&logo=jetpack-compose"/>
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge"/>
+  <a href="https://github.com/HenryMax2025/hello-weather/actions/workflows/build.yml/badge.svg">
+    <img src="https://github.com/HenryMax2025/hello-weather/actions/workflows/build.yml/badge.svg" alt="Build Status"/>
+  </a>
+  <img src="https://img.shields.io/badge/Platform-Android-green?style=for-the-badge&logo=android" alt="Platform"/>
+  <img src="https://img.shields.io/badge/Language-Kotlin-purple?style=for-the-badge&logo=kotlin" alt="Language"/>
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-blue?style=for-the-badge&logo=jetpack-compose" alt="UI Framework"/>
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License"/>
+  <img src="https://img.shields.io/github/downloads/HenryMax2025/hello-weather/total?style=for-the-badge" alt="Downloads"/>
 </p>
 
 ---
 
-> 🌤️ 一个美丽的 Android 天气应用 | 毛玻璃/液体玻璃 UI 设计
+> 🌤️ 一个美丽的 Android 天气应用 | 毛玻璃/液体玻璃 UI 设计 | [下载APK](https://github.com/HenryMax2025/hello-weather/releases/latest)
 
 ## 📱 截图预览
 
@@ -52,8 +56,11 @@ hello-weather/
 │   │   │   └── theme/         # 主题配置
 │   │   └── res/               # 资源文件
 │   └── build.gradle.kts
+├── .github/workflows/         # GitHub Actions
 ├── gradle/                    # Gradle 配置
 ├── build.gradle.kts           # 项目级构建配置
+├── LICENSE                    # 开源协议
+├── CONTRIBUTING.md            # 贡献指南
 └── README.md
 ```
 
@@ -61,7 +68,7 @@ hello-weather/
 
 ### 环境要求
 - Android Studio Arctic Fox 或更高版本
-- JDK 11+
+- JDK 17+
 - Gradle 9.4+
 
 ### 编译运行
@@ -82,11 +89,16 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 ### APK 下载
 
-[![Download APK](https://img.shields.io/badge/Download-APK-red?style=for-the-badge&logo=github)](https://github.com/HenryMax2025/hello-weather/releases/latest)
+[![Download APK](https://img.shields.io/badge/Download-Latest-blue?style=for-the-badge&logo=github)](https://github.com/HenryMax2025/hello-weather/releases/latest)
+[![Download APK v1.0](https://img.shields.io/badge/Download-v1.0-green?style=for-the-badge&logo=github)](https://github.com/HenryMax2025/hello-weather/releases/tag/v1.0)
 
 ## 📊 数据来源
 
 天气数据由 [Open-Meteo](https://open-meteo.com/) 提供，这是一个免费、开源的天气 API，无需 API 密钥。
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解更多。
 
 ## 📄 开源协议
 
@@ -95,5 +107,6 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/HenryMax2025">HenryMax</a>
+  Made with ❤️ by <a href="https://github.com/HenryMax2025">HenryMax</a> | 
+  <img src="https://img.shields.io/github/stars/HenryMax2025/hello-weather?style=social" alt="Stars"/>
 </p>
