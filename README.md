@@ -110,3 +110,8 @@ adb install app/build/outputs/apk/debug/app-debug.apk
   Made with ❤️ by <a href="https://github.com/HenryMax2025">HenryMax</a> | 
   <img src="https://img.shields.io/github/stars/HenryMax2025/hello-weather?style=social" alt="Stars"/>
 </p>
+
+## 📧 联系方式
+
+- Email: Henry_Max@163.com
+- GitHub: <a href="https://github.com/HenryMax2025">HenryMax2025</a>
