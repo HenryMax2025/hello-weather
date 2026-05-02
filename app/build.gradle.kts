@@ -24,6 +24,7 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
+            archiveFileName = "hello天气"
         }
         release {
             isMinifyEnabled = false
@@ -39,12 +40,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-}
-
-android.applicationVariants.all {
-    outputs.forEach { output ->
-        output.outputFileName = if (name == "debug") "hello天气.apk" else "hello天气-release.apk"
     }
 }
 
