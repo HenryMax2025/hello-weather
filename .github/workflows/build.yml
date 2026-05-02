@@ -38,5 +38,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: hello-weather-debug
+          name: hello天气
           path: app/build/outputs/apk/debug/app-debug.apk

@@ -22,6 +22,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            apkFileName = "hello天气.apk"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
