@@ -1,7 +1,7 @@
 # hello天气 ☁️
 
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="120" alt="App Icon"/>
+  <img src="screenshots/app-icon.png" width="120" alt="App Icon"/>
 </p>
 
 <p align="center">
@@ -15,7 +15,13 @@
 
 > 🌤️ 一个美丽的 Android 天气应用 | 毛玻璃/液体玻璃 UI 设计
 
-## 📱 功能特点
+## 📱 截图预览
+
+| 应用截图 |
+|:--------:|
+| <img src="screenshots/screenshot.png" width="300" alt="App Screenshot"/> |
+
+## ✨ 功能特点
 
 | 功能 | 描述 |
 |------|------|
