@@ -1,5 +1,8 @@
 package com.example.hello.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,26 +15,46 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.hello.data.City
+import com.example.hello.data.LocationStatus
 import com.example.hello.data.getWeatherEmoji
 import com.example.hello.ui.DailyItem
 import com.example.hello.ui.HourlyItem
@@ -40,6 +63,7 @@ import com.example.hello.ui.WeatherViewModel
 import com.example.hello.ui.components.GlassCard
 import com.example.hello.ui.components.GlassCardSolid
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(
     modifier: Modifier = Modifier,
@@ -56,99 +80,271 @@ fun WeatherScreen(
                 )
             )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            CitySelector(
-                cities = viewModel.cities,
-                currentCity = uiState.currentCity.name,
-                onCitySelected = { city -> viewModel.loadWeather(city) }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(300.dp),
-                    contentAlignment = Alignment.Center
+        when {
+            uiState.locationStatus == LocationStatus.DENIED -> {
+                PermissionDeniedContent(
+                    onRetry = { viewModel.retry() }
+                )
+            }
+            uiState.error != null && uiState.currentCity == null -> {
+                ErrorContent(
+                    message = uiState.error!!,
+                    onRetry = { viewModel.retry() }
+                )
+            }
+            uiState.isLoading && uiState.currentCity == null -> {
+                LoadingContent()
+            }
+            else -> {
+                PullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.refresh() },
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    CircularProgressIndicator(color = Color.White)
-                }
-            } else {
-                CurrentWeatherCard(uiState)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (uiState.hourlyData.isNotEmpty()) {
-                Text(
-                    text = "小时预报",
-                    color = Color.White.copy(alpha = 0.9f),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                HourlyForecast(uiState.hourlyData)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (uiState.dailyData.isNotEmpty()) {
-                Text(
-                    text = "7天预报",
-                    color = Color.White.copy(alpha = 0.9f),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                DailyForecast(uiState.dailyData)
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-        }
-    }
-}
-
-@Composable
-fun CitySelector(
-    cities: List<com.example.hello.data.City>,
-    currentCity: String,
-    onCitySelected: (com.example.hello.data.City) -> Unit
-) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp)
-    ) {
-        items(cities) { city ->
-            val isSelected = city.name == currentCity
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        if (isSelected) Color.White.copy(alpha = 0.3f)
-                        else Color.White.copy(alpha = 0.15f)
+                    MainContent(
+                        uiState = uiState,
+                        onSearchQueryChange = { viewModel.searchCities(it) },
+                        onCitySelected = { city ->
+                            viewModel.clearSearch()
+                            viewModel.loadWeather(city)
+                        },
+                        onClearSearch = { viewModel.clearSearch() },
+                        onRequestLocation = { viewModel.requestLocation() }
                     )
-                    .clickable { onCitySelected(city) }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = city.name,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                )
+                }
             }
         }
     }
 }
 
 @Composable
-fun CurrentWeatherCard(uiState: WeatherUiState) {
+private fun MainContent(
+    uiState: WeatherUiState,
+    onSearchQueryChange: (String) -> Unit,
+    onCitySelected: (City) -> Unit,
+    onClearSearch: () -> Unit,
+    onRequestLocation: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Spacer(modifier = Modifier.height(32.dp))
+
+        SearchBar(
+            query = searchQuery,
+            onQueryChange = {
+                searchQuery = it
+                onSearchQueryChange(it)
+            },
+            onClear = {
+                searchQuery = ""
+                onClearSearch()
+            },
+            onRequestLocation = onRequestLocation
+        )
+
+        AnimatedVisibility(
+            visible = uiState.searchResults.isNotEmpty(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            SearchResults(
+                results = uiState.searchResults,
+                onCitySelected = onCitySelected
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (uiState.isLoading && uiState.currentCity != null) {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(300.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        } else {
+            CurrentWeatherCard(uiState)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (uiState.hourlyData.isNotEmpty()) {
+            Text(
+                text = "小时预报",
+                color = Color.White.copy(alpha = 0.9f),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            HourlyForecast(uiState.hourlyData)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (uiState.dailyData.isNotEmpty()) {
+            Text(
+                text = "7天预报",
+                color = Color.White.copy(alpha = 0.9f),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            DailyForecast(uiState.dailyData)
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+    }
+}
+
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClear: () -> Unit,
+    onRequestLocation: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        GlassCardSolid(
+            modifier = Modifier.weight(1f),
+            cornerRadius = 24.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "搜索",
+                    tint = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    modifier = Modifier.weight(1f),
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        color = Color.White,
+                        fontSize = 14.sp
+                    ),
+                    cursorBrush = SolidColor(Color.White),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (query.isEmpty()) {
+                                Text(
+                                    text = "搜索城市...",
+                                    color = Color.White.copy(alpha = 0.5f),
+                                    fontSize = 14.sp
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+                if (query.isNotEmpty()) {
+                    IconButton(
+                        onClick = onClear,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "清除",
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        IconButton(
+            onClick = onRequestLocation,
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.2f))
+        ) {
+            Icon(
+                imageVector = Icons.Default.MyLocation,
+                contentDescription = "定位",
+                tint = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchResults(
+    results: List<City>,
+    onCitySelected: (City) -> Unit
+) {
+    GlassCardSolid(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        cornerRadius = 16.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            if (results.isEmpty()) {
+                Text(
+                    text = "未找到相关城市",
+                    color = Color.White.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                results.forEach { city ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onCitySelected(city) }
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = city.name,
+                                color = Color.White,
+                                fontSize = 14.sp
+                            )
+                            if (city.province != null) {
+                                Text(
+                                    text = city.province,
+                                    color = Color.White.copy(alpha = 0.5f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CurrentWeatherCard(uiState: WeatherUiState) {
     GlassCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -157,11 +353,19 @@ fun CurrentWeatherCard(uiState: WeatherUiState) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = uiState.currentCity.name,
+                text = uiState.currentCity?.name ?: "未知位置",
                 color = Color.White.copy(alpha = 0.9f),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
             )
+
+            if (uiState.currentCity?.district != null) {
+                Text(
+                    text = uiState.currentCity.district,
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 14.sp
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -205,7 +409,7 @@ fun CurrentWeatherCard(uiState: WeatherUiState) {
 }
 
 @Composable
-fun WeatherInfoItem(label: String, value: String) {
+private fun WeatherInfoItem(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
@@ -223,7 +427,7 @@ fun WeatherInfoItem(label: String, value: String) {
 }
 
 @Composable
-fun HourlyForecast(hourlyData: List<HourlyItem>) {
+private fun HourlyForecast(hourlyData: List<HourlyItem>) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 4.dp)
@@ -261,7 +465,7 @@ fun HourlyForecast(hourlyData: List<HourlyItem>) {
 }
 
 @Composable
-fun DailyForecast(dailyData: List<DailyItem>) {
+private fun DailyForecast(dailyData: List<DailyItem>) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -324,6 +528,121 @@ fun DailyForecast(dailyData: List<DailyItem>) {
                             fontWeight = FontWeight.Medium
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator(color = Color.White)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "正在获取位置...",
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorContent(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(
+                text = "⚠️",
+                fontSize = 48.sp
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = message,
+                color = Color.White,
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            TextButton(onClick = onRetry) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "重试",
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionDeniedContent(
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(
+                text = "📍",
+                fontSize = 48.sp
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "需要位置权限",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "请授权位置权限以获取本地天气",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            TextButton(onClick = onRetry) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "授予权限",
+                        color = Color.White
+                    )
                 }
             }
         }

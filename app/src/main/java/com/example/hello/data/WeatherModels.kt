@@ -48,19 +48,18 @@ data class DailyWeather(
 data class City(
     val name: String,
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+    val district: String? = null,
+    val province: String? = null
 )
 
-val chineseCities = listOf(
-    City("北京", 39.9042, 116.4074),
-    City("上海", 31.2304, 121.4737),
-    City("广州", 23.1291, 113.2644),
-    City("深圳", 22.5431, 114.0579),
-    City("杭州", 30.2741, 120.1551),
-    City("成都", 30.5728, 104.0668),
-    City("武汉", 30.5928, 114.3055),
-    City("西安", 34.3416, 108.9398)
-)
+enum class LocationStatus {
+    IDLE,
+    REQUESTING,
+    GRANTED,
+    DENIED,
+    ERROR
+}
 
 fun getWeatherDescription(code: Int): String {
     return when (code) {

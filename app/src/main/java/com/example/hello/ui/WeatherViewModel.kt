@@ -1,23 +1,24 @@
 package com.example.hello.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hello.data.City
+import com.example.hello.data.LocationService
+import com.example.hello.data.LocationStatus
 import com.example.hello.data.WeatherRepository
-import com.example.hello.data.chineseCities
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
 data class WeatherUiState(
     val isLoading: Boolean = false,
-    val currentCity: City = chineseCities[0],
+    val isRefreshing: Boolean = false,
+    val currentCity: City? = null,
     val temperature: String = "--",
     val humidity: String = "--",
     val feelsLike: String = "--",
@@ -28,7 +29,10 @@ data class WeatherUiState(
     val pressure: String = "--",
     val hourlyData: List<HourlyItem> = emptyList(),
     val dailyData: List<DailyItem> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val locationStatus: LocationStatus = LocationStatus.IDLE,
+    val searchResults: List<City> = emptyList(),
+    val isSearching: Boolean = false
 )
 
 data class HourlyItem(
@@ -55,21 +59,72 @@ data class DailyItem(
     val sunset: String = "--"
 )
 
-class WeatherViewModel : ViewModel() {
+class WeatherViewModel(application: Application) : AndroidViewModel(application) {
+
     private val _uiState = MutableStateFlow(WeatherUiState())
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
-    val cities: List<City> = chineseCities
+    private val locationService = LocationService(application.applicationContext)
 
     init {
-        loadWeather(chineseCities[0])
+        requestLocation()
+    }
+
+    fun requestLocation() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                locationStatus = LocationStatus.REQUESTING,
+                error = null
+            )
+
+            try {
+                val location = locationService.getLastLocation()
+                    ?: locationService.getLocationFlow().let {
+                        var result: com.example.hello.data.LocationData? = null
+                        it.collect { loc ->
+                            result = loc
+                        }
+                        result
+                    }
+
+                if (location != null) {
+                    val city = City(
+                        name = location.city ?: location.district ?: "未知位置",
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        district = location.district,
+                        province = location.province
+                    )
+                    _uiState.value = _uiState.value.copy(
+                        currentCity = city,
+                        locationStatus = LocationStatus.GRANTED
+                    )
+                    loadWeather(city)
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        locationStatus = LocationStatus.ERROR,
+                        error = "无法获取位置信息"
+                    )
+                }
+            } catch (e: SecurityException) {
+                _uiState.value = _uiState.value.copy(
+                    locationStatus = LocationStatus.DENIED,
+                    error = "需要位置权限才能获取本地天气"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    locationStatus = LocationStatus.ERROR,
+                    error = e.message ?: "获取位置失败"
+                )
+            }
+        }
     }
 
     fun loadWeather(city: City) {
         viewModelScope.launch {
-            try {
-                _uiState.value = _uiState.value.copy(isLoading = true, currentCity = city, error = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, currentCity = city, error = null)
 
+            try {
                 val result = WeatherRepository.getWeather(city)
 
                 result.onSuccess { response ->
@@ -126,6 +181,7 @@ class WeatherViewModel : ViewModel() {
 
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
+                        isRefreshing = false,
                         temperature = current?.temperature_2m?.let { it.toInt().toString() } ?: "--",
                         humidity = current?.relative_humidity_2m?.toString() ?: "--",
                         feelsLike = current?.apparent_temperature?.let { it.toInt().toString() } ?: "--",
@@ -140,16 +196,49 @@ class WeatherViewModel : ViewModel() {
                 }.onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
+                        isRefreshing = false,
                         error = e.message ?: "获取天气失败"
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
+                    isRefreshing = false,
                     error = e.message ?: "未知错误"
                 )
             }
         }
+    }
+
+    fun refresh() {
+        _uiState.value.currentCity?.let { city ->
+            _uiState.value = _uiState.value.copy(isRefreshing = true)
+            loadWeather(city)
+        }
+    }
+
+    fun searchCities(query: String) {
+        if (query.length < 2) {
+            _uiState.value = _uiState.value.copy(searchResults = emptyList(), isSearching = false)
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSearching = true)
+            val results = locationService.searchCities(query)
+            _uiState.value = _uiState.value.copy(
+                searchResults = results,
+                isSearching = false
+            )
+        }
+    }
+
+    fun clearSearch() {
+        _uiState.value = _uiState.value.copy(searchResults = emptyList())
+    }
+
+    fun retry() {
+        requestLocation()
     }
 
     private fun getWeatherDesc(code: Int): String {
