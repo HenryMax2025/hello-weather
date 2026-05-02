@@ -23,16 +23,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -222,11 +214,9 @@ private fun SearchBar(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "搜索",
-                    tint = Color.White.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
+                Text(
+                    text = "🔍",
+                    fontSize = 18.sp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 BasicTextField(
@@ -256,11 +246,10 @@ private fun SearchBar(
                         onClick = onClear,
                         modifier = Modifier.size(24.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "清除",
-                            tint = Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(18.dp)
+                        Text(
+                            text = "✕",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 16.sp
                         )
                     }
                 }
@@ -276,10 +265,9 @@ private fun SearchBar(
                 .clip(CircleShape)
                 .background(Color.White.copy(alpha = 0.2f))
         ) {
-            Icon(
-                imageVector = Icons.Default.MyLocation,
-                contentDescription = "定位",
-                tint = Color.White
+            Text(
+                text = "📍",
+                fontSize = 20.sp
             )
         }
     }
@@ -315,11 +303,9 @@ private fun SearchResults(
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(20.dp)
+                        Text(
+                            text = "📍",
+                            fontSize = 18.sp
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
@@ -582,10 +568,9 @@ private fun ErrorContent(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = null,
-                        tint = Color.White
+                    Text(
+                        text = "🔄",
+                        fontSize = 18.sp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -633,10 +618,9 @@ private fun PermissionDeniedContent(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = Color.White
+                    Text(
+                        text = "📍",
+                        fontSize = 18.sp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
