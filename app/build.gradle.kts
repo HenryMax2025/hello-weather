@@ -24,7 +24,6 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
-            archiveFileName = "hello天气"
         }
         release {
             isMinifyEnabled = false
