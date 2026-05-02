@@ -242,9 +242,11 @@ private fun SearchBar(
                     }
                 )
                 if (query.isNotEmpty()) {
-                    IconButton(
-                        onClick = onClear,
-                        modifier = Modifier.size(24.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { onClear() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "✕",
@@ -258,12 +260,13 @@ private fun SearchBar(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        IconButton(
-            onClick = onRequestLocation,
+        Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(Color.White.copy(alpha = 0.2f))
+                .clickable { onRequestLocation() },
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "📍",
